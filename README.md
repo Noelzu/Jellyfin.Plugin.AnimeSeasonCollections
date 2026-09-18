@@ -1,6 +1,6 @@
 # Anime Season Collections for Jellyfin 12
 
-This Plugin was vibecoded using ChatGPT. I also dont plan to check this repo to often so some bugs could remain unresolved for a bit.
+This plugin was developed with assistance from ChatGPT. Maintenance is best-effort, so issue responses and fixes may sometimes be delayed.
 
 A Jellyfin 12 / .NET 10 plugin that creates calendar-season collections from **Season items** belonging to shows whose Jellyfin **Genres** include `Anime` **or** `Animation`.
 
@@ -55,11 +55,11 @@ The `2026 Winter` example shows the same generated presentation for a Winter buc
 
 ## Important behavior
 
-This first build is **additive**. If a Season's date is later corrected so it belongs to a different bucket, the next run adds it to the new bucket but does not automatically remove it from the old generated bucket. That avoids destructive edits in the initial version. Removal/reconciliation can be added once tested on your server.
+The current version is **additive**. If a Season's date is later corrected so it belongs to a different bucket, the next run adds it to the new bucket but does not automatically remove it from the old generated bucket. Automatic removal/reconciliation of outdated collection membership is not implemented in the current version.
 
 ## Install through Jellyfin's Plugin Catalog
 
-The repository contains a Jellyfin plugin repository manifest at `manifest.json`, so the plugin can be installed and updated from Jellyfin's normal plugin page once a release has been published.
+The repository contains a Jellyfin plugin repository manifest at `manifest.json`, so the plugin can be installed and updated from Jellyfin's normal plugin page.
 
 ### Repository URL
 
@@ -81,50 +81,6 @@ In Jellyfin:
 8. Restart Jellyfin after installation if requested.
 9. Open the plugin settings page and configure library Include/Exclude rules.
 10. Run **Dashboard -> Scheduled Tasks -> Library -> Refresh Anime Season Collections** once manually if you want the first collections generated immediately.
-
-### Public-access requirement
-
-For normal Jellyfin repository installation, both the GitHub repository manifest and the GitHub Release ZIP must be accessible without GitHub authentication.
-
-That means this repository must be **Public** (or the files must otherwise be hosted at publicly reachable URLs). A private GitHub repository will not work as a normal Jellyfin plugin repository because Jellyfin does not authenticate to GitHub when downloading the raw manifest or release ZIP.
-
-## Releases and manifest updates
-
-The repository includes:
-
-```text
-manifest.json
-.github/workflows/release.yml
-```
-
-The **Build Jellyfin Release** GitHub Actions workflow handles the release packaging for you.
-
-To publish the current plugin version:
-
-1. Open the repository on GitHub.
-2. Go to **Actions**.
-3. Select **Build Jellyfin Release**.
-4. Click **Run workflow** and run it against `main`.
-
-The workflow then:
-
-- installs the .NET 10 SDK;
-- compiles the plugin;
-- creates the stripped Jellyfin plugin ZIP;
-- excludes foreign/runtime DLLs such as native `libSkiaSharp.dll`;
-- calculates the ZIP's MD5 checksum;
-- creates or updates the matching GitHub Release;
-- uploads the plugin ZIP to the release;
-- updates the matching entry in `manifest.json` with the real checksum, release URL and timestamp;
-- commits the updated manifest back to `main`.
-
-For version `12.0.0.8`, the release asset is expected at:
-
-```text
-https://github.com/Noelzu/Jellyfin.Plugin.AnimeSeasonCollections/releases/download/v12.0.0.8/AnimeSeasonCollections_12.0.0.8.zip
-```
-
-The manifest initially contains an empty checksum until the release workflow has successfully run at least once. Do **not** expect Jellyfin installation from the repository URL to work correctly until the release ZIP exists and `manifest.json` contains the generated checksum.
 
 ## Build locally
 
@@ -188,3 +144,7 @@ runtimes/win-arm64/native/libSkiaSharp.dll
 must **not** be placed in the plugin directory. Jellyfin can try to load such native DLLs as managed plugin assemblies and disable the entire plugin with `BadImageFormatException`.
 
 The included build scripts and GitHub release workflow deliberately package only the plugin's own managed DLL to prevent this.
+
+## Maintainer notes
+
+Release publishing and manifest maintenance are documented in [RELEASING.md](RELEASING.md).
