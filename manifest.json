@@ -1,0 +1,20 @@
+[
+  {
+    "guid": "59a674e1-a81c-4102-a617-3e74f5babc2f",
+    "name": "Anime Season Collections",
+    "description": "Automatically groups Anime and Animation seasons into Winter, Spring, Summer, and Autumn collections based on season premiere dates, with generated collage posters and logos.",
+    "overview": "Automatic seasonal collections for Anime and Animation libraries in Jellyfin 12.",
+    "owner": "Noelzu",
+    "category": "General",
+    "versions": [
+      {
+        "version": "12.0.0.8",
+        "changelog": "Initial Jellyfin 12 repository release. Supports Anime/Animation genre matching, library include/exclude filters, seasonal collection creation, release-date metadata, generated poster collages and logos, and a scheduled refresh task.",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.AnimeSeasonCollections/releases/download/v12.0.0.8/AnimeSeasonCollections_12.0.0.8.zip",
+        "checksum": "",
+        "timestamp": "2026-09-18T20:27:00Z"
+      }
+    ]
+  }
+]
