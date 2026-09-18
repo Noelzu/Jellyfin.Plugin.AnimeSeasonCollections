@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Anime Season Collections</title>
+</head>
+<body>
+<div id="animeSeasonCollectionsConfigPage"
+     data-role="page"
+     class="page type-interior pluginConfigurationPage"
+     data-require="emby-button,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+            <h1>Anime Season Collections</h1>
+
+            <form id="animeSeasonCollectionsConfigForm">
+                <div class="verticalSection">
+                    <h2 class="sectionTitle">Library filtering</h2>
+                    <div class="fieldDescription" style="margin-bottom:1.25em;">
+                        Choose which Jellyfin libraries the scheduled task may scan. If no library is checked under
+                        <strong>Include</strong>, all libraries are included by default. Any library checked under
+                        <strong>Exclude</strong> is always ignored, even if it was included.
+                    </div>
+
+                    <div style="display:flex;gap:.75em;flex-wrap:wrap;margin-bottom:1em;">
+                        <button id="ascIncludeAll" is="emby-button" type="button" class="raised emby-button">
+                            <span>Include all shown</span>
+                        </button>
+                        <button id="ascClearIncludes" is="emby-button" type="button" class="raised emby-button">
+                            <span>Clear includes</span>
+                        </button>
+                        <button id="ascClearExcludes" is="emby-button" type="button" class="raised emby-button">
+                            <span>Clear excludes</span>
+                        </button>
+                    </div>
+
+                    <div id="ascLibraryStatus" class="fieldDescription" style="margin-bottom:.75em;"></div>
+                    <div id="ascLibraryList"></div>
+
+                    <div class="fieldDescription" style="margin-top:1em;">
+                        Examples: leave Include empty and exclude one library to scan everything except that library;
+                        or select only your Anime/Animation/Shows libraries under Include to restrict the task to those libraries.
+                    </div>
+                </div>
+
+                <div style="margin-top:2em;">
+                    <button id="ascSaveButton" is="emby-button" type="submit" class="raised button-submit block emby-button">
+                        <span>Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<script type="text/javascript">
+(function () {
+    'use strict';
+
+    const PLUGIN_ID = '59a674e1-a81c-4102-a617-3e74f5babc2f';
+    const page = document.querySelector('#animeSeasonCollectionsConfigPage');
+    const form = document.querySelector('#animeSeasonCollectionsConfigForm');
+    const list = document.querySelector('#ascLibraryList');
+    const status = document.querySelector('#ascLibraryStatus');
+    const saveButton = document.querySelector('#ascSaveButton');
+
+    let loadedLibraries = [];
+    let currentConfig = null;
+
+    function getValue(object, pascalName, camelName) {
+        if (!object) {
+            return null;
+        }
+        return object[pascalName] !== undefined ? object[pascalName] : object[camelName];
+    }
+
+    function normalizeId(value) {
+        return (value || '').toString().replace(/-/g, '').toLowerCase();
+    }
+
+    function configuredIdSet(values) {
+        return new Set((values || []).map(normalizeId).filter(Boolean));
+    }
+
+    function makeCheckbox(library, mode, checked) {
+        const label = document.createElement('label');
+        label.className = 'emby-checkbox-label';
+        label.style.marginRight = '1.25em';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.setAttribute('is', 'emby-checkbox');
+        input.className = 'emby-checkbox asc-library-toggle';
+        input.dataset.mode = mode;
+        input.dataset.libraryId = library.id;
+        input.checked = checked;
+
+        const text = document.createElement('span');
+        text.textContent = mode === 'include' ? 'Include' : 'Exclude';
+
+        input.addEventListener('change', function () {
+            if (!input.checked) {
+                return;
+            }
+
+            const opposite = mode === 'include' ? 'exclude' : 'include';
+            const other = list.querySelector(
+                '.asc-library-toggle[data-mode="' + opposite + '"][data-library-id="' + library.id + '"]'
+            );
+            if (other) {
+                other.checked = false;
+            }
+        });
+
+        label.appendChild(input);
+        label.appendChild(text);
+        return label;
+    }
+
+    function renderLibraries(config) {
+        list.innerHTML = '';
+
+        const includes = configuredIdSet(getValue(config, 'IncludedLibraryIds', 'includedLibraryIds'));
+        const excludes = configuredIdSet(getValue(config, 'ExcludedLibraryIds', 'excludedLibraryIds'));
+
+        if (!loadedLibraries.length) {
+            status.textContent = 'No Jellyfin media libraries were returned by the server.';
+            return;
+        }
+
+        status.textContent = loadedLibraries.length + ' librar' + (loadedLibraries.length === 1 ? 'y' : 'ies') + ' available.';
+
+        loadedLibraries.forEach(function (library) {
+            const row = document.createElement('div');
+            row.className = 'paperList';
+            row.style.padding = '.9em 1em';
+            row.style.marginBottom = '.55em';
+            row.style.borderRadius = '.3em';
+
+            const top = document.createElement('div');
+            top.style.display = 'flex';
+            top.style.alignItems = 'center';
+            top.style.justifyContent = 'space-between';
+            top.style.gap = '1em';
+            top.style.flexWrap = 'wrap';
+
+            const info = document.createElement('div');
+            const name = document.createElement('div');
+            name.style.fontWeight = '600';
+            name.textContent = library.name || '(Unnamed library)';
+            info.appendChild(name);
+
+            const detail = document.createElement('div');
+            detail.className = 'fieldDescription';
+            const detailParts = [];
+            if (library.collectionType) {
+                detailParts.push(library.collectionType);
+            }
+            if (library.locations.length) {
+                detailParts.push(library.locations.join(' | '));
+            }
+            detail.textContent = detailParts.join(' — ');
+            info.appendChild(detail);
+
+            const controls = document.createElement('div');
+            controls.style.display = 'flex';
+            controls.style.alignItems = 'center';
+            controls.style.flexWrap = 'wrap';
+            controls.appendChild(makeCheckbox(library, 'include', includes.has(normalizeId(library.id))));
+            controls.appendChild(makeCheckbox(library, 'exclude', excludes.has(normalizeId(library.id))));
+
+            top.appendChild(info);
+            top.appendChild(controls);
+            row.appendChild(top);
+            list.appendChild(row);
+        });
+    }
+
+    async function getLibraries() {
+        const response = await ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Library/VirtualFolders')
+        });
+
+        const data = typeof response.json === 'function' ? await response.json() : response;
+        return (data || []).map(function (library) {
+            return {
+                id: (getValue(library, 'ItemId', 'itemId') || '').toString(),
+                name: getValue(library, 'Name', 'name') || '',
+                collectionType: getValue(library, 'CollectionType', 'collectionType') || '',
+                locations: getValue(library, 'Locations', 'locations') || []
+            };
+        }).filter(function (library) {
+            return !!library.id;
+        }).sort(function (a, b) {
+            return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+        });
+    }
+
+    async function loadPage() {
+        Dashboard.showLoadingMsg();
+        saveButton.disabled = true;
+        status.textContent = 'Loading libraries…';
+
+        try {
+            const results = await Promise.all([
+                ApiClient.getPluginConfiguration(PLUGIN_ID),
+                getLibraries()
+            ]);
+
+            currentConfig = results[0];
+            loadedLibraries = results[1];
+            renderLibraries(currentConfig);
+            saveButton.disabled = false;
+        } catch (error) {
+            console.error('Anime Season Collections configuration load failed', error);
+            status.textContent = 'Could not load the Jellyfin library list. Reload this page and check the browser/server log.';
+        } finally {
+            Dashboard.hideLoadingMsg();
+        }
+    }
+
+    function checkedIds(mode) {
+        return Array.from(list.querySelectorAll('.asc-library-toggle[data-mode="' + mode + '"]:checked'))
+            .map(function (input) { return input.dataset.libraryId; })
+            .filter(Boolean);
+    }
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        Dashboard.showLoadingMsg();
+
+        try {
+            const config = currentConfig || await ApiClient.getPluginConfiguration(PLUGIN_ID);
+            config.IncludedLibraryIds = checkedIds('include');
+            config.ExcludedLibraryIds = checkedIds('exclude');
+
+            const result = await ApiClient.updatePluginConfiguration(PLUGIN_ID, config);
+            currentConfig = config;
+            Dashboard.processPluginConfigurationUpdateResult(result);
+        } catch (error) {
+            console.error('Anime Season Collections configuration save failed', error);
+            Dashboard.hideLoadingMsg();
+            alert('Could not save Anime Season Collections settings. Check the browser/server log.');
+        }
+
+        return false;
+    });
+
+    document.querySelector('#ascIncludeAll').addEventListener('click', function () {
+        list.querySelectorAll('.asc-library-toggle[data-mode="include"]').forEach(function (input) {
+            input.checked = true;
+            const id = input.dataset.libraryId;
+            const excluded = list.querySelector('.asc-library-toggle[data-mode="exclude"][data-library-id="' + id + '"]');
+            if (excluded) {
+                excluded.checked = false;
+            }
+        });
+    });
+
+    document.querySelector('#ascClearIncludes').addEventListener('click', function () {
+        list.querySelectorAll('.asc-library-toggle[data-mode="include"]').forEach(function (input) {
+            input.checked = false;
+        });
+    });
+
+    document.querySelector('#ascClearExcludes').addEventListener('click', function () {
+        list.querySelectorAll('.asc-library-toggle[data-mode="exclude"]').forEach(function (input) {
+            input.checked = false;
+        });
+    });
+
+    page.addEventListener('pageshow', loadPage);
+})();
+</script>
+</div>
+</body>
+</html>
