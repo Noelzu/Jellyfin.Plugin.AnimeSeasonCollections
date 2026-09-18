@@ -1,6 +1,6 @@
 # Anime Season Collections for Jellyfin 12
 
-This Plugin was vibecoded using ChatGPT. I also dont plan to check this repo to open so some bugs could remain unresolved for a bit.
+This Plugin was vibecoded using ChatGPT. I also dont plan to check this repo to often so some bugs could remain unresolved for a bit.
 
 A Jellyfin 12 / .NET 10 plugin that creates calendar-season collections from **Season items** belonging to shows whose Jellyfin **Genres** include `Anime` **or** `Animation`.
 
