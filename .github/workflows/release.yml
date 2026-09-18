@@ -1,0 +1,133 @@
+name: Build Jellyfin Release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      - name: Read plugin version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('Jellyfin.Plugin.AnimeSeasonCollections.csproj').getroot()
+          version = root.findtext('.//Version')
+          if not version:
+              raise SystemExit('Version not found in csproj')
+          print(version)
+          PY
+          )
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "zip=dist/AnimeSeasonCollections_${VERSION}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Build plugin ZIP
+        shell: bash
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Calculate MD5 checksum
+        id: checksum
+        shell: bash
+        run: |
+          CHECKSUM=$(md5sum "${{ steps.version.outputs.zip }}" | awk '{print $1}')
+          echo "checksum=$CHECKSUM" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          ZIP: ${{ steps.version.outputs.zip }}
+        shell: bash
+        run: |
+          TAG="v${VERSION}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" \
+              --target main \
+              --title "$TAG" \
+              --notes "Anime Season Collections $VERSION for Jellyfin 12."
+          fi
+
+      - name: Update manifest checksum and release metadata
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CHECKSUM: ${{ steps.checksum.outputs.checksum }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import datetime
+          import json
+          import os
+
+          path = 'manifest.json'
+          version = os.environ['VERSION']
+          checksum = os.environ['CHECKSUM']
+          repo = os.environ['REPOSITORY']
+          source = f'https://github.com/{repo}/releases/download/v{version}/AnimeSeasonCollections_{version}.zip'
+          now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+
+          with open(path, 'r', encoding='utf-8') as f:
+              manifest = json.load(f)
+
+          plugin = manifest[0]
+          versions = plugin.setdefault('versions', [])
+          entry = next((x for x in versions if x.get('version') == version), None)
+          if entry is None:
+              entry = {
+                  'version': version,
+                  'changelog': f'Release {version}.',
+                  'targetAbi': '12.0.0.0',
+                  'sourceUrl': source,
+                  'checksum': checksum,
+                  'timestamp': now
+              }
+              versions.insert(0, entry)
+          else:
+              entry['sourceUrl'] = source
+              entry['checksum'] = checksum
+              entry['targetAbi'] = '12.0.0.0'
+              entry['timestamp'] = now
+
+          versions.sort(key=lambda x: tuple(int(p) for p in x['version'].split('.')), reverse=True)
+
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump(manifest, f, indent=2)
+              f.write('\n')
+          PY
+
+      - name: Commit updated manifest
+        shell: bash
+        run: |
+          if git diff --quiet -- manifest.json; then
+            echo 'Manifest already up to date.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add manifest.json
+          git commit -m "Update manifest for v${{ steps.version.outputs.version }}"
+          git push origin HEAD:main
