@@ -6,9 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Jellyfin.Plugin.AnimeSeasonCollections</RootNamespace>
     <AssemblyName>Jellyfin.Plugin.AnimeSeasonCollections</AssemblyName>
-    <Version>12.0.0.8</Version>
-    <AssemblyVersion>12.0.0.8</AssemblyVersion>
-    <FileVersion>12.0.0.8</FileVersion>
+    <Version>12.0.0.9</Version>
+    <AssemblyVersion>12.0.0.9</AssemblyVersion>
+    <FileVersion>12.0.0.9</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
