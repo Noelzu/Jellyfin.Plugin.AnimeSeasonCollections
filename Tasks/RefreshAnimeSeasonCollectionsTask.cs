@@ -2,7 +2,6 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.AnimeSeasonCollections.Models;
 using Jellyfin.Plugin.AnimeSeasonCollections.Services;
 using MediaBrowser.Controller.Collections;
-using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
@@ -185,7 +184,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             // ordinary folder children. Use the same linked-child view as Jellyfin's own
             // CollectionManager so membership checks reflect the collection's real stored links.
             var existingMemberIds = collection
-                .GetLinkedChildren(new DtoOptions(false))
+                .GetLinkedChildren()
                 .Select(item => item.Id)
                 .ToHashSet();
 
@@ -237,7 +236,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             // This is the authoritative collection membership representation used by Jellyfin.
             var collectionAfterAdd = _libraryManager.GetItemById(collection.Id) as BoxSet ?? collection;
             var linkedMemberIdsAfter = collectionAfterAdd
-                .GetLinkedChildren(new DtoOptions(false))
+                .GetLinkedChildren()
                 .Select(item => item.Id)
                 .ToHashSet();
 
