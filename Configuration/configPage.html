@@ -15,6 +15,24 @@
 
             <form id="animeSeasonCollectionsConfigForm">
                 <div class="verticalSection">
+                    <h2 class="sectionTitle">Client compatibility</h2>
+
+                    <label class="emby-checkbox-label" style="display:block;margin-bottom:.5em;">
+                        <input id="ascIncludeParentSeries"
+                               type="checkbox"
+                               is="emby-checkbox"
+                               class="emby-checkbox"
+                               checked>
+                        <span>Also add the parent Series to each seasonal collection</span>
+                    </label>
+
+                    <div class="fieldDescription" style="margin-bottom:1.75em;">
+                        Jellyfin supports Season items inside collections, but some TV clients only render Movies and Series
+                        and silently ignore Season members. When enabled, the matching parent Series is added alongside the
+                        precise Season item so those clients still show usable entries. Jellyfin Web will continue to show the
+                        Season items as well. This option is enabled by default.
+                    </div>
+
                     <h2 class="sectionTitle">Library filtering</h2>
                     <div class="fieldDescription" style="margin-bottom:1.25em;">
                         Choose which Jellyfin libraries the scheduled task may scan. If no library is checked under
@@ -209,6 +227,14 @@
 
             currentConfig = results[0];
             loadedLibraries = results[1];
+
+            const compatibilityValue = getValue(
+                currentConfig,
+                'IncludeParentSeriesForClientCompatibility',
+                'includeParentSeriesForClientCompatibility'
+            );
+            document.querySelector('#ascIncludeParentSeries').checked = compatibilityValue !== false;
+
             renderLibraries(currentConfig);
             saveButton.disabled = false;
         } catch (error) {
@@ -233,6 +259,8 @@
             const config = currentConfig || await ApiClient.getPluginConfiguration(PLUGIN_ID);
             config.IncludedLibraryIds = checkedIds('include');
             config.ExcludedLibraryIds = checkedIds('exclude');
+            config.IncludeParentSeriesForClientCompatibility =
+                document.querySelector('#ascIncludeParentSeries').checked;
 
             const result = await ApiClient.updatePluginConfiguration(PLUGIN_ID, config);
             currentConfig = config;
