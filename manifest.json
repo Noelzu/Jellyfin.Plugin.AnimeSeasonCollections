@@ -8,14 +8,6 @@
     "category": "General",
     "versions": [
       {
-        "version": "12.0.0.9",
-        "changelog": "Adds TV-client compatibility mode. Seasonal collections can now include matching parent Series alongside precise Season items so clients that ignore Season collection members still display usable entries. Adds a configuration toggle for this behavior.",
-        "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.AnimeSeasonCollections/releases/download/v12.0.0.9/AnimeSeasonCollections_12.0.0.9.zip",
-        "checksum": "",
-        "timestamp": "2026-09-19T02:00:00Z"
-      },
-      {
         "version": "12.0.0.8",
         "changelog": "Initial Jellyfin 12 repository release. Supports Anime/Animation genre matching, library include/exclude filters, seasonal collection creation, release-date metadata, generated poster collages and logos, and a scheduled refresh task.",
         "targetAbi": "12.0.0.0",
