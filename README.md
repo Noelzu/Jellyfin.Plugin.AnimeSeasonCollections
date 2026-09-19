@@ -18,7 +18,7 @@ A Jellyfin 12 / .NET 10 plugin that creates calendar-season collections from **S
 - Creates real native Jellyfin collections containing the **Season items**, not the parent Series.
 - Gives every generated collection a canonical release date at the first day of its bucket, e.g. `2026 Winter` = `2026-01-01`.
 - Sets ProductionYear and a chronological ForcedSortName (`YYYY-01` through `YYYY-04`).
-- Reads each generated collection's **direct** members first and calls Jellyfin's `ICollectionManager` only for Season IDs that are actually missing; already-added Seasons are not re-submitted on later task runs. After adding, the plugin verifies direct BoxSet membership and logs any Season that is still missing.
+- Reads each generated collection's stored **BoxSet LinkedChildren** and calls Jellyfin's `ICollectionManager` only for Season IDs that are actually missing; already-added Seasons are not re-submitted on later task runs. After adding, the plugin reloads the BoxSet and verifies the actual linked membership.
 - Stamps generated collections in `ProviderIds` so the plugin knows which collections it owns. It deliberately refuses to modify an unstamped user collection with the same name.
 - Generates:
   - a 1500x2250 (2:3) Primary collage using all readable Primary images on the Season items;
@@ -108,7 +108,7 @@ chmod +x build.sh
 The scripts publish into `dist/plugin` and create:
 
 ```text
-dist/AnimeSeasonCollections_12.0.0.9.zip
+dist/AnimeSeasonCollections_12.0.0.10.zip
 ```
 
 ## Manual install
@@ -117,8 +117,8 @@ Manual installation is still available if you do not want to use the Jellyfin pl
 
 1. Stop Jellyfin.
 2. Create a plugin folder, for example:
-   `/config/data/plugins/AnimeSeasonCollections_12.0.0.9/`
-3. Extract the contents of `dist/AnimeSeasonCollections_12.0.0.9.zip` into that folder.
+   `/config/data/plugins/AnimeSeasonCollections_12.0.0.10/`
+3. Extract the contents of `dist/AnimeSeasonCollections_12.0.0.10.zip` into that folder.
 4. Start Jellyfin.
 5. Open the plugin settings page and choose any library Include/Exclude rules you want.
 6. Run `Dashboard -> Scheduled Tasks -> Library -> Refresh Anime Season Collections` once manually.
@@ -129,7 +129,7 @@ Manual installation is still available if you do not want to use the Jellyfin pl
 - Target framework: `net10.0`
 - Jellyfin API packages: `12.0.0`
 - SkiaSharp: `3.119.4`, matching Jellyfin 12's runtime line
-- Current plugin version: `12.0.0.9`
+- Current plugin version: `12.0.0.10`
 
 ### Jellyfin 12 / SkiaSharp packaging note
 
