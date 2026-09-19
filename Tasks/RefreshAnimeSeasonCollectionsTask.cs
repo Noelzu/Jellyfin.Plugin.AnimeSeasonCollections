@@ -180,10 +180,13 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
                 _logger.LogInformation("Created collection {Collection}", collection.Name);
             }
 
+            // Check only direct BoxSet members. Recursive=true can return descendants of
+            // linked items and make the plugin incorrectly believe a Season is already a
+            // direct member of the collection.
             var existingMemberIds = _libraryManager.GetItemList(new InternalItemsQuery
             {
                 ParentId = collection.Id,
-                Recursive = true
+                Recursive = false
             }).Select(item => item.Id).ToHashSet();
 
             var missingSeasonIds = desiredSeasons
@@ -195,7 +198,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             {
                 await _collectionManager.AddToCollectionAsync(collection.Id, missingSeasonIds).ConfigureAwait(false);
                 _logger.LogInformation(
-                    "Added {Count} new Season item(s) to {Collection}; {Existing} desired member(s) were already present",
+                    "Attempted to add {Count} new Season item(s) to {Collection}; {Existing} desired direct member(s) were already present",
                     missingSeasonIds.Length,
                     collection.Name,
                     desiredSeasons.Length - missingSeasonIds.Length);
@@ -203,6 +206,41 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             else
             {
                 _logger.LogDebug("No new Season items needed for {Collection}", collection.Name);
+            }
+
+            // Verify the actual direct BoxSet membership after the add operation.
+            // Artwork is generated from desiredSeasons, so without this verification an
+            // intended Season could appear in the collage even if it was not actually
+            // linked into the collection.
+            var directMemberIdsAfter = _libraryManager.GetItemList(new InternalItemsQuery
+            {
+                ParentId = collection.Id,
+                Recursive = false
+            }).Select(item => item.Id).ToHashSet();
+
+            var stillMissingSeasons = desiredSeasons
+                .Where(season => !directMemberIdsAfter.Contains(season.Id))
+                .ToArray();
+
+            _logger.LogInformation(
+                "{Collection}: desired Seasons={DesiredCount}, direct members before={BeforeCount}, attempted additions={AttemptedCount}, desired Seasons present after={PresentAfterCount}, still missing={MissingCount}",
+                collection.Name,
+                desiredSeasons.Length,
+                existingMemberIds.Count,
+                missingSeasonIds.Length,
+                desiredSeasons.Length - stillMissingSeasons.Length,
+                stillMissingSeasons.Length);
+
+            foreach (var missingSeason in stillMissingSeasons)
+            {
+                var parentSeries = _libraryManager.GetItemById(missingSeason.ParentId) as Series;
+                _logger.LogWarning(
+                    "{Collection}: Season still missing after add verification. Series={Series}; Season={Season}; SeasonId={SeasonId}; Genres={Genres}",
+                    collection.Name,
+                    parentSeries?.Name ?? "(unknown series)",
+                    missingSeason.Name,
+                    missingSeason.Id,
+                    parentSeries is null ? "(unknown)" : string.Join(", ", parentSeries.Genres));
             }
 
             collection.PremiereDate = bucket.CanonicalDateUtc;
