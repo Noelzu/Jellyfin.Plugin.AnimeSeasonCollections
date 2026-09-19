@@ -18,11 +18,4 @@ public sealed class PluginConfiguration : BasePluginConfiguration
     /// Exclusion always wins over inclusion.
     /// </summary>
     public string[] ExcludedLibraryIds { get; set; } = [];
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the parent Series should also be
-    /// added to each generated collection for clients that do not render Season
-    /// items inside collections. Enabled by default for broad client compatibility.
-    /// </summary>
-    public bool IncludeParentSeriesForClientCompatibility { get; set; } = true;
 }
