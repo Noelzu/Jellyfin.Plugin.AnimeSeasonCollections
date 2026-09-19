@@ -4,7 +4,7 @@ $project = Join-Path $PSScriptRoot 'Jellyfin.Plugin.AnimeSeasonCollections.cspro
 $dist = Join-Path $PSScriptRoot 'dist'
 $publish = Join-Path $dist 'publish'
 $plugin = Join-Path $dist 'plugin'
-$zip = Join-Path $dist 'AnimeSeasonCollections_12.0.0.8.zip'
+$zip = Join-Path $dist 'AnimeSeasonCollections_12.0.0.9.zip'
 $assembly = 'Jellyfin.Plugin.AnimeSeasonCollections'
 
 if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
