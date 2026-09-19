@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DIST="$ROOT/dist"
 PUBLISH="$DIST/publish"
 PLUGIN="$DIST/plugin"
-ZIP="$DIST/AnimeSeasonCollections_12.0.0.9.zip"
+ZIP="$DIST/AnimeSeasonCollections_12.0.0.10.zip"
 ASSEMBLY="Jellyfin.Plugin.AnimeSeasonCollections"
 
 command -v dotnet >/dev/null 2>&1 || { echo '.NET 10 SDK was not found in PATH.' >&2; exit 1; }
