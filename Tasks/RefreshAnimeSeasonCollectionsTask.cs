@@ -217,11 +217,6 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
                 _logger.LogDebug("No new Season items needed for {Collection}", collection.Name);
             }
 
-            var existingSeriesIds = existingMembers
-                .OfType<Series>()
-                .Select(item => item.Id)
-                .ToHashSet();
-
             if (includeParentSeriesForClientCompatibility)
             {
                 var desiredSeriesIds = desiredSeries.Select(item => item.Id).ToHashSet();
