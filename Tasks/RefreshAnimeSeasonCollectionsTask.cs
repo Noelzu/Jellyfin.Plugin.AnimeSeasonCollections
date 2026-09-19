@@ -51,8 +51,6 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
         var config = Plugin.Instance?.Configuration;
         var includedLibraryIds = ParseLibraryIds(config?.IncludedLibraryIds);
         var excludedLibraryIds = ParseLibraryIds(config?.ExcludedLibraryIds);
-        var includeParentSeriesForClientCompatibility =
-            config?.IncludeParentSeriesForClientCompatibility ?? true;
 
         var seriesQuery = new InternalItemsQuery
         {
@@ -86,7 +84,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             includedLibraryIds.Length,
             excludedLibraryIds.Length);
 
-        var buckets = new Dictionary<SeasonBucket, List<SeasonBucketEntry>>();
+        var buckets = new Dictionary<SeasonBucket, List<Season>>();
         var examined = 0;
 
         foreach (var show in series)
@@ -128,7 +126,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
                     buckets[bucket] = members;
                 }
 
-                members.Add(new SeasonBucketEntry(season, show));
+                members.Add(season);
             }
 
             examined++;
@@ -150,14 +148,6 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             cancellationToken.ThrowIfCancellationRequested();
             var bucket = pair.Key;
             var desiredSeasons = pair.Value
-                .Select(entry => entry.Season)
-                .GroupBy(s => s.Id)
-                .Select(g => g.First())
-                .OrderBy(s => s.SortName ?? s.Name, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-
-            var desiredSeries = pair.Value
-                .Select(entry => entry.Series)
                 .GroupBy(s => s.Id)
                 .Select(g => g.First())
                 .OrderBy(s => s.SortName ?? s.Name, StringComparer.OrdinalIgnoreCase)
@@ -190,13 +180,11 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
                 _logger.LogInformation("Created collection {Collection}", collection.Name);
             }
 
-            var existingMembers = _libraryManager.GetItemList(new InternalItemsQuery
+            var existingMemberIds = _libraryManager.GetItemList(new InternalItemsQuery
             {
                 ParentId = collection.Id,
-                Recursive = false
-            }).ToArray();
-
-            var existingMemberIds = existingMembers.Select(item => item.Id).ToHashSet();
+                Recursive = true
+            }).Select(item => item.Id).ToHashSet();
 
             var missingSeasonIds = desiredSeasons
                 .Select(s => s.Id)
@@ -217,30 +205,10 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
                 _logger.LogDebug("No new Season items needed for {Collection}", collection.Name);
             }
 
-            if (includeParentSeriesForClientCompatibility)
-            {
-                var desiredSeriesIds = desiredSeries.Select(item => item.Id).ToHashSet();
-                var missingSeriesIds = desiredSeriesIds
-                    .Where(id => !existingMemberIds.Contains(id))
-                    .ToArray();
-
-                if (missingSeriesIds.Length > 0)
-                {
-                    await _collectionManager.AddToCollectionAsync(collection.Id, missingSeriesIds).ConfigureAwait(false);
-                    _logger.LogInformation(
-                        "Added {Count} parent Series item(s) to {Collection} for TV-client compatibility",
-                        missingSeriesIds.Length,
-                        collection.Name);
-                }
-
-            }
-
             collection.PremiereDate = bucket.CanonicalDateUtc;
             collection.ProductionYear = bucket.Year;
             collection.ForcedSortName = bucket.ForcedSortName;
-            collection.Overview = includeParentSeriesForClientCompatibility
-                ? $"Anime seasons released in {bucket.Quarter} {bucket.Year}. Matching parent series are also included for TV-client compatibility. Generated and maintained by Anime Season Collections."
-                : $"Anime seasons released in {bucket.Quarter} {bucket.Year}. Generated and maintained by Anime Season Collections.";
+            collection.Overview = $"Anime seasons released in {bucket.Quarter} {bucket.Year}. Generated and maintained by Anime Season Collections.";
             collection.ProviderIds[OwnershipProviderKey] = bucket.ProviderValue;
 
             await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, cancellationToken).ConfigureAwait(false);
@@ -312,6 +280,4 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             c.ProviderIds.TryGetValue(OwnershipProviderKey, out var stamp)
             && string.Equals(stamp, bucket.ProviderValue, StringComparison.OrdinalIgnoreCase));
     }
-
-    private sealed record SeasonBucketEntry(Season Season, Series Series);
 }
