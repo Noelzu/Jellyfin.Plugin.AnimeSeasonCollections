@@ -185,7 +185,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             // ordinary folder children. Use the same linked-child view as Jellyfin's own
             // CollectionManager so membership checks reflect the collection's real stored links.
             var existingMemberIds = collection
-                .GetLinkedChildren(DtoOptions.StoredColumnsOnly)
+                .GetLinkedChildren(new DtoOptions(false))
                 .Select(item => item.Id)
                 .ToHashSet();
 
@@ -237,7 +237,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             // This is the authoritative collection membership representation used by Jellyfin.
             var collectionAfterAdd = _libraryManager.GetItemById(collection.Id) as BoxSet ?? collection;
             var linkedMemberIdsAfter = collectionAfterAdd
-                .GetLinkedChildren(DtoOptions.StoredColumnsOnly)
+                .GetLinkedChildren(new DtoOptions(false))
                 .Select(item => item.Id)
                 .ToHashSet();
 
