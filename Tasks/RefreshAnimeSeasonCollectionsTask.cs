@@ -193,7 +193,7 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
             var existingMembers = _libraryManager.GetItemList(new InternalItemsQuery
             {
                 ParentId = collection.Id,
-                Recursive = true
+                Recursive = false
             }).ToArray();
 
             var existingMemberIds = existingMembers.Select(item => item.Id).ToHashSet();
@@ -238,26 +238,6 @@ public sealed class RefreshAnimeSeasonCollectionsTask : IScheduledTask
                         collection.Name);
                 }
 
-                var staleSeriesIds = existingSeriesIds
-                    .Where(id => !desiredSeriesIds.Contains(id))
-                    .ToArray();
-
-                if (staleSeriesIds.Length > 0)
-                {
-                    await _collectionManager.RemoveFromCollectionAsync(collection.Id, staleSeriesIds).ConfigureAwait(false);
-                    _logger.LogInformation(
-                        "Removed {Count} stale parent Series compatibility item(s) from {Collection}",
-                        staleSeriesIds.Length,
-                        collection.Name);
-                }
-            }
-            else if (existingSeriesIds.Count > 0)
-            {
-                await _collectionManager.RemoveFromCollectionAsync(collection.Id, existingSeriesIds).ConfigureAwait(false);
-                _logger.LogInformation(
-                    "Removed {Count} parent Series compatibility item(s) from {Collection} because compatibility mode is disabled",
-                    existingSeriesIds.Count,
-                    collection.Name);
             }
 
             collection.PremiereDate = bucket.CanonicalDateUtc;
