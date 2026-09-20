@@ -46,8 +46,8 @@
         "changelog": "Initial Jellyfin repository release. AI-upscales exact 1920x1080 local artwork to validated 3840x2160 output with per-library selection, optional backups, GPU/model settings, and a scheduled task.",
         "targetAbi": "12.1.0.0",
         "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.BackgroundUpscaler/releases/download/v12.1.0.1/BackgroundUpscaler_12.1.0.1.zip",
-        "checksum": "e153da892738cc679403c42757904d6c",
-        "timestamp": "2026-09-20T12:06:45Z"
+        "checksum": "c32912b7b78fa0120f38b953c7115d98",
+        "timestamp": "2026-09-20T12:07:16Z"
       }
     ]
   }
