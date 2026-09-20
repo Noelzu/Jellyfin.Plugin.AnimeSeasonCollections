@@ -32,5 +32,23 @@
         "timestamp": "2026-09-18T20:36:41Z"
       }
     ]
+  },
+  {
+    "guid": "4e0caa51-128e-4faa-8267-0d9d2b256a1e",
+    "name": "Background Upscaler",
+    "description": "AI-upscales exact 1920x1080 local Jellyfin artwork to validated 3840x2160 output using Real-ESRGAN, with per-library selection.",
+    "overview": "AI 1080p-to-4K artwork upscaling for selected Jellyfin 12.1 libraries.",
+    "owner": "Noelzu",
+    "category": "General",
+    "versions": [
+      {
+        "version": "12.1.0.1",
+        "changelog": "Initial Jellyfin repository release. AI-upscales exact 1920x1080 local artwork to validated 3840x2160 output with per-library selection, optional backups, GPU/model settings, and a scheduled task.",
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.BackgroundUpscaler/releases/download/v12.1.0.1/BackgroundUpscaler_12.1.0.1.zip",
+        "checksum": "e153da892738cc679403c42757904d6c",
+        "timestamp": "2026-09-20T12:06:45Z"
+      }
+    ]
   }
 ]
