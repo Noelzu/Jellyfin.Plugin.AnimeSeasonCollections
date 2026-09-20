@@ -1,0 +1,134 @@
+name: Sync Combined Plugin Manifest
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Refresh release metadata
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import re
+          import urllib.request
+
+          path = 'manifest.json'
+          plugins = {
+              '59a674e1-a81c-4102-a617-3e74f5babc2f': {
+                  'repo': 'Noelzu/Jellyfin.Plugin.AnimeSeasonCollections',
+                  'asset_prefix': 'AnimeSeasonCollections_',
+                  'targetAbi': '12.0.0.0',
+              },
+              '4e0caa51-128e-4faa-8267-0d9d2b256a1e': {
+                  'repo': 'Noelzu/Jellyfin.Plugin.BackgroundUpscaler',
+                  'asset_prefix': 'BackgroundUpscaler_',
+                  'targetAbi': '12.1.0.0',
+              },
+          }
+
+          def get_json(url):
+              req = urllib.request.Request(url, headers={
+                  'Accept': 'application/vnd.github+json',
+                  'User-Agent': 'Noelzu-Jellyfin-Manifest-Sync',
+              })
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return json.load(response)
+
+          def get_md5(url):
+              req = urllib.request.Request(url, headers={
+                  'User-Agent': 'Noelzu-Jellyfin-Manifest-Sync',
+              })
+              digest = hashlib.md5()
+              with urllib.request.urlopen(req, timeout=180) as response:
+                  while True:
+                      chunk = response.read(1024 * 1024)
+                      if not chunk:
+                          break
+                      digest.update(chunk)
+              return digest.hexdigest()
+
+          def version_key(value):
+              return tuple(int(part) for part in value.split('.'))
+
+          with open(path, 'r', encoding='utf-8') as f:
+              manifest = json.load(f)
+
+          by_guid = {plugin['guid']: plugin for plugin in manifest}
+
+          for guid, cfg in plugins.items():
+              plugin = by_guid.get(guid)
+              if plugin is None:
+                  raise SystemExit(f'Missing plugin {guid} in manifest')
+
+              versions = plugin.setdefault('versions', [])
+              existing = {entry['version']: entry for entry in versions}
+              releases = get_json(f"https://api.github.com/repos/{cfg['repo']}/releases?per_page=100")
+
+              for release in releases:
+                  if release.get('draft') or release.get('prerelease'):
+                      continue
+
+                  match = re.fullmatch(r'v(\d+\.\d+\.\d+\.\d+)', release.get('tag_name', ''))
+                  if not match:
+                      continue
+
+                  version = match.group(1)
+                  asset_name = f"{cfg['asset_prefix']}{version}.zip"
+                  asset = next((a for a in release.get('assets', []) if a.get('name') == asset_name), None)
+                  if asset is None:
+                      continue
+
+                  entry = existing.get(version)
+                  if entry is None:
+                      body = (release.get('body') or '').strip()
+                      entry = {
+                          'version': version,
+                          'changelog': body or f'Release {version}.',
+                          'targetAbi': cfg['targetAbi'],
+                          'sourceUrl': asset['browser_download_url'],
+                          'checksum': get_md5(asset['browser_download_url']),
+                          'timestamp': release.get('published_at') or release.get('created_at'),
+                      }
+                      versions.append(entry)
+                      existing[version] = entry
+                  else:
+                      entry['targetAbi'] = cfg['targetAbi']
+                      entry['sourceUrl'] = asset['browser_download_url']
+                      entry['checksum'] = get_md5(asset['browser_download_url'])
+                      entry['timestamp'] = release.get('published_at') or release.get('created_at')
+
+              versions.sort(key=lambda x: version_key(x['version']), reverse=True)
+
+          with open(path, 'w', encoding='utf-8') as f:
+              json.dump(manifest, f, indent=2)
+              f.write('\n')
+          PY
+
+      - name: Commit changes
+        shell: bash
+        run: |
+          if git diff --quiet -- manifest.json; then
+            echo 'Combined manifest is already current.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add manifest.json
+          git commit -m 'Sync combined plugin manifest'
+          git push origin HEAD:main
