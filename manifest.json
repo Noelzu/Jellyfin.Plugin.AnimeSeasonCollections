@@ -13,7 +13,7 @@
         "targetAbi": "12.0.0.0",
         "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.AnimeSeasonCollections/releases/download/v12.0.0.10/AnimeSeasonCollections_12.0.0.10.zip",
         "checksum": "d18c26a0a9e94117a6aba286059f13da",
-        "timestamp": "2026-09-19T18:45:16Z"
+        "timestamp": "2026-09-19T18:45:15Z"
       },
       {
         "version": "12.0.0.9",
@@ -47,7 +47,7 @@
         "targetAbi": "12.1.0.0",
         "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.BackgroundUpscaler/releases/download/v12.1.0.4/BackgroundUpscaler_12.1.0.4.zip",
         "checksum": "9685b34c49bb614cae8f724c05da88b3",
-        "timestamp": "2026-09-20T13:03:16Z"
+        "timestamp": "2026-09-20T13:03:15Z"
       },
       {
         "version": "12.1.0.3",
@@ -71,7 +71,7 @@
         "targetAbi": "12.1.0.0",
         "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.BackgroundUpscaler/releases/download/v12.1.0.1/BackgroundUpscaler_12.1.0.1.zip",
         "checksum": "c32912b7b78fa0120f38b953c7115d98",
-        "timestamp": "2026-09-20T12:07:16Z"
+        "timestamp": "2026-09-20T12:06:44Z"
       }
     ]
   }
