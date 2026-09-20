@@ -57,9 +57,9 @@ The `2026 Winter` example shows the same generated presentation for a Winter buc
 
 The current version is **additive**. If a Season's date is later corrected so it belongs to a different bucket, the next run adds it to the new bucket but does not automatically remove it from the old generated bucket. Automatic removal/reconciliation of outdated collection membership is not implemented in the current version.
 
-## Install through Jellyfin's Plugin Catalog
+## Install through the combined Noelzu Plugin Catalog
 
-The repository contains a Jellyfin plugin repository manifest at `manifest.json`, so the plugin can be installed and updated from Jellyfin's normal plugin page.
+The repository manifest is now a combined Noelzu Jellyfin plugin catalog. It includes Anime Season Collections and Background Upscaler, so one repository entry can install and update both plugins.
 
 ### Repository URL
 
@@ -73,11 +73,11 @@ In Jellyfin:
 
 1. Open **Dashboard -> Plugins -> Repositories**.
 2. Click **+** to add a repository.
-3. Use a name such as `Anime Season Collections`.
+3. Use a name such as `Noelzu Jellyfin Plugins`.
 4. Paste the repository URL above.
 5. Save the repository.
 6. Open **Dashboard -> Plugins -> Catalog**.
-7. Find **Anime Season Collections** and install it.
+7. Find **Anime Season Collections** or **Background Upscaler** and install the plugin you want.
 8. Restart Jellyfin after installation if requested.
 9. Open the plugin settings page and configure library Include/Exclude rules.
 10. Run **Dashboard -> Scheduled Tasks -> Library -> Refresh Anime Season Collections** once manually if you want the first collections generated immediately.
