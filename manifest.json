@@ -46,7 +46,7 @@
         "changelog": "Adds an optional 1280x720 Backdrop toggle. 1920x1080 Backdrops still upscale 2x to 3840x2160; when enabled, exact 1280x720 Backdrops upscale 3x to the same 4K target. Backdrop-only filtering and all 12.1.0.4 safety features remain.",
         "targetAbi": "12.1.0.0",
         "sourceUrl": "https://github.com/Noelzu/Jellyfin.Plugin.BackgroundUpscaler/releases/download/v12.1.0.5/BackgroundUpscaler_12.1.0.5.zip",
-        "checksum": "e9125e454e559f5b56bc1a518925d250",
+        "checksum": "100354c9efebf7ada1a8110b78595cfd",
         "timestamp": "2026-09-20T16:55:50Z"
       },
       {
